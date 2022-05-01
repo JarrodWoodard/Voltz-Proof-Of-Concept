@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -e
+set -u
+
+script_name="$(basename "$0")"
+script_dir="$(realpath "$(dirname "$0")")"
+
+usage() {
+  printf "%s: usage: %s\n" "$script_name" "$script_name" >&2
+}
+
+exit_with_error() {
+  printf "%s: error: %s\n" "$script_name" "$1" >&2
+  usage
+  exit 1
+}
+
+recieved_arguments="$#"
+expected_arguments="0"
+
+if [ "${recieved_arguments}" != "${expected_arguments}" ]; then
+  exit_with_error "invalid number of arguments, expected \"${expected_arguments}\", recieved \"${recieved_arguments}\""
+fi
+
+push_images() {
+  (
+    cd "$1" || exit_with_error "failed to access directory \"$1\""
+    docker push "$2:latest"
+    docker push "$2:$3"
+  )
+}
+
+root_dir="$(realpath "$script_dir/..")" &&
+  docker_image_name="$("$script_dir/get-docker-image-name" "$root_dir")" &&
+  package_version="$("$script_dir/get-version" "$root_dir")" &&
+  push_images "$root_dir" "$docker_image_name" "$package_version"
