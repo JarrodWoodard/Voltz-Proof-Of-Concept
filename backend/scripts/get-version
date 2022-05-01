@@ -1,0 +1,30 @@
+#!/bin/sh
+
+set -e
+set -u
+
+script_name="$(basename "$0")"
+
+usage() {
+  printf "%s: usage: %s ROOT_DIRECTORY\n" "$script_name" "$script_name" >&2
+}
+
+exit_with_error() {
+  printf "%s: error: %s\n" "$script_name" "$1" >&2
+  usage
+  exit 1
+}
+
+recieved_arguments="$#"
+expected_arguments="1"
+
+if [ "${recieved_arguments}" != "${expected_arguments}" ]; then
+  exit_with_error "invalid number of arguments, expected \"${expected_arguments}\", recieved \"${recieved_arguments}\""
+fi
+
+if ! [ -r "$1/package.json" ]; then
+  exit_with_error "file \"$1/package.json\" doesn't exists or is not readable"
+fi
+
+grep "version" "$1/package.json" |
+  sed -E 's/\s*"version": "([^"]+)",?/\1/'
